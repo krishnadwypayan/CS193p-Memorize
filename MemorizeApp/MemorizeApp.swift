@@ -8,10 +8,10 @@
 import SwiftUI
 
 @main
-struct MemorizeAppApp: App {
+struct MemorizeApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ThemeView()
         }
     }
 }
