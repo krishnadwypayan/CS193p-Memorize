@@ -74,7 +74,7 @@ struct AddThemeModalView: View {
                     TextField("Theme Name", text: $themeName)
                     ColorPicker("Theme Color", selection: $themeColor)
                     Picker(selection: $numberOfPairsToShow, label: Text("Pairs to Show")) {
-                        ForEach(1...8, id: \.self) {
+                        ForEach(1...20, id: \.self) {
                             Text("\($0)")
                         }
                     }

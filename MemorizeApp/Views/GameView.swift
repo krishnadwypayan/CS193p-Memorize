@@ -10,7 +10,7 @@ import SwiftUI
 struct GameView: View {
     
     private var themeContent: ThemeViewModel.ThemeContent
-    @ObservedObject private var gameViewModel: GameViewModel
+    @ObservedObject var gameViewModel: GameViewModel
     
     init(themeContent: ThemeViewModel.ThemeContent) {
         self.themeContent = themeContent
@@ -51,36 +51,13 @@ struct GameView: View {
 }
 
 struct CardsListView: View {
-    @State var orientation = UIDeviceOrientation.unknown
     @ObservedObject var gameViewModel: GameViewModel
     var themeContent: ThemeViewModel.ThemeContent
     
     var body: some View {
-        ScrollView {
-            let screenSize: CGRect = UIScreen.main.bounds
-            let screenWidth = screenSize.width
-            let screenHeight = screenSize.height
-            
-            let columns = Array<GridItem>(repeating: GridItem(.adaptive(minimum: screenHeight/4)), count: 4)
-            let rows = Array<GridItem>(repeating: GridItem(.adaptive(minimum: screenWidth/2)), count: 8)
-        
-            if orientation.isPortrait || screenWidth < screenHeight {
-                LazyVGrid(columns: columns, content: { content })
-                    .foregroundColor(themeContent.themeColor)
-            } else if orientation.isLandscape || screenWidth > screenHeight {
-                LazyVGrid(columns: rows, content: { content })
-                    .foregroundColor(themeContent.themeColor)
-            }
-        }
-        .onRotate { newOrientation in
-            orientation = newOrientation
-        }
-    }
-    
-    var content: some View {
-        ForEach(gameViewModel.model.cards) { card in
+        AspectVGrid(items: gameViewModel.model.cards, aspectRatio: 2/3, content: { card in
             CardView(card: card)
-                .aspectRatio(2/3, contentMode: .fit)
+                .padding(GameViewConstants.padding4)
                 .onTapGesture {
                     gameViewModel.choose(card)
                 }
@@ -93,7 +70,8 @@ struct CardsListView: View {
                           },
                           secondaryButton: .cancel({}))
                 }
-        }
+        })
+        .foregroundColor(themeContent.themeColor)
     }
 }
 
@@ -101,58 +79,49 @@ struct CardView: View {
     var card: GameModel<String>.Card
     
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 15.0)
-        ZStack {
-            if card.isFaceUp {
-                shape.fill().foregroundColor(.white)
-                shape.strokeBorder(lineWidth: 3)
-                Text(card.content).font(.largeTitle)
-            } else if card.isMatched {
-                shape.opacity(0.3)
-            } else {
-                shape.fill()
+        GeometryReader { geometry in
+            let shape = RoundedRectangle(cornerRadius: GameViewConstants.cardCornerRadius)
+            ZStack {
+                if card.isFaceUp {
+                    shape.fill().foregroundColor(.white)
+                    shape.strokeBorder(lineWidth: GameViewConstants.cardLineWidth)
+                    Pie(startAngle: Angle(degrees: 0-90), endAngle: Angle(degrees: 300-90))
+                        .padding(GameViewConstants.padding4)
+                        .opacity(GameViewConstants.cardBackgroundCircleOpacity)
+                    Text(card.content)
+                        .font(Font.system(size: cardContentSize(size: geometry.size)))
+                } else if card.isMatched {
+                    shape.opacity(GameViewConstants.cardMatchedOpacity)
+                } else {
+                    shape.fill()
+                }
             }
         }
     }
-}
-
-struct DeviceRotationViewModifier: ViewModifier {
-    let action: (UIDeviceOrientation) -> Void
-
-    func body(content: Content) -> some View {
-        content
-            .onAppear()
-            .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in
-                action(UIDevice.current.orientation)
-            }
+    
+    private func cardContentSize(size: CGSize) -> CGFloat {
+        return min(size.width, size.height) * GameViewConstants.cardContentAspectRatio
     }
 }
 
-// A View wrapper to make the modifier easier to use
-extension View {
-    func onRotate(perform action: @escaping (UIDeviceOrientation) -> Void) -> some View {
-        self.modifier(DeviceRotationViewModifier(action: action))
-    }
+struct GameViewConstants {
+    static var cardCornerRadius: CGFloat = 15
+    static var cardContentAspectRatio: CGFloat = 0.7
+    static var cardLineWidth: CGFloat = 3
+    static var cardBackgroundCircleOpacity: Double = 0.45
+    static var cardMatchedOpacity: Double = 0.3
+    static var padding4: CGFloat = 4
 }
 
 struct GameView_Previews: PreviewProvider {
-    var gameViewModel: GameViewModel
-    
     static var previews: some View {
-        GameView(themeContent:
-                    ThemeViewModel.ThemeContent(
-                        themeName: "Vehicles", themeColor: .red,
-                        themeIcon: Image(systemName: "car"),
-                        emojis: ["🚗", "🚀", "🚲", "✈️", "🛵", "⛴", "🚚", "🚁"], numberOfPairsToShow: 8, id: 0
-                    )
-        )
         
         GameView(themeContent:
                     ThemeViewModel.ThemeContent(
                         themeName: "Vehicles", themeColor: .red,
                         themeIcon: Image(systemName: "car"),
-                        emojis: ["🚗", "🚀", "🚲", "✈️", "🛵", "⛴", "🚚", "🚁"], numberOfPairsToShow: 8, id: 0
-                    )
-        ).preferredColorScheme(.dark)
+                        emojis: ["🚗", "🚀", "🚲", "✈️", "🛵", "⛴", "🚚", "🚁"],
+                        numberOfPairsToShow: 4, id: 0)
+        )
     }
 }

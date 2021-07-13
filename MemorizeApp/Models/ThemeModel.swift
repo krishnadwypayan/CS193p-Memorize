@@ -8,7 +8,7 @@
 import Foundation
 
 struct ThemeModel {
-    var themesList: [ThemeData] = [
+    let themesList: [ThemeData] = [
         ThemeData(name: "Vehicles",
               emojis: ["✈️", "🚗", "🚀", "⛵️", "🛵", "🚓", "🏎", "🛴", "🚲", "🛺", "🚅", "🛶", "🛳", "⛴", "🚌", "🚛", "🚤", "🚑"],
               numberOfPairsToShow: 8, themeColor: "red"),

@@ -66,6 +66,6 @@ class ThemeViewModel: ObservableObject {
         var themeIcon: Image
         var emojis: [String]
         var numberOfPairsToShow: Int
-        var id: Int
+        let id: Int
     }
 }
